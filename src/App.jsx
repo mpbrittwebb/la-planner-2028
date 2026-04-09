@@ -85,6 +85,7 @@ function App() {
   const [spentTickets, setSpentTickets] = useState(0)
   const [over200Toggle, setOver200Toggle] = useState(false)
   const [ticketsToSecure, setTicketsToSecure] = useState(4)
+  const [dollarsToSecure, setDollarsToSecure] = useState('')
   const [recommendationIndex, setRecommendationIndex] = useState(0)
   const [viewMode, setViewMode] = useState('pilot')
 
@@ -144,15 +145,16 @@ function App() {
   const onSecured = () => {
     if (!nextMove) return
     const n = Math.max(1, Math.min(Number(ticketsToSecure) || 1, remainingCapacity))
-    setWonSessions((prev) => [...prev, { ...nextMove, tickets: n }])
+    const dollars = Math.max(0, Number(dollarsToSecure) || 0)
+    setWonSessions((prev) => [...prev, { ...nextMove, tickets: n, dollars }])
     setSpentTickets((prev) => prev + n)
     setRecommendationIndex(0)
+    setDollarsToSecure('')
   }
 
   const onRejected = () => {
     if (!nextMove) return
     setRejectedIds((prev) => [...prev, nextMove.id])
-    setRecommendationIndex(0)
   }
 
   const onRemoveSecured = (sessionKey) => {
@@ -173,6 +175,8 @@ function App() {
         weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
       }),
     }))
+
+  const totalSpend = wonSessions.reduce((sum, session) => sum + (Number(session.dollars) || 0), 0)
 
   const sessionsBySport = useMemo(() => {
     const grouped = {}
@@ -244,6 +248,21 @@ function App() {
                 </label>
                 <p className="tickets-hint">Max this window: {remainingCapacity}</p>
               </div>
+              <div className="tickets-row">
+                <label className="tickets-label">
+                  Dollars secured now ($)
+                  <input
+                    className="tickets-input"
+                    type="number"
+                    min={0}
+                    step="1"
+                    value={dollarsToSecure}
+                    onChange={(e) => setDollarsToSecure(e.target.value)}
+                    placeholder="0"
+                  />
+                </label>
+                <p className="tickets-hint">Tracked per secured event</p>
+              </div>
               {nextMove.trafficRisk && !nextMove.medalSession && (
                 <p className="traffic amber">
                   Traffic Shield: cross-town peak-hour commute detected (kept only if medal priority requires it).
@@ -269,15 +288,6 @@ function App() {
                 <p className="nav-copy">
                   {Math.min(activeRecommendationIndex + 1, Math.max(scoredSessions.length, 1))} / {scoredSessions.length} ranked options
                 </p>
-                <button
-                  className="nav-btn"
-                  onClick={() =>
-                    setRecommendationIndex((idx) => Math.min(Math.max(scoredSessions.length - 1, 0), idx + 1))
-                  }
-                  disabled={recommendationIndex >= scoredSessions.length - 1}
-                >
-                  Forward Event
-                </button>
               </div>
             </>
           ) : (
@@ -328,6 +338,10 @@ function App() {
             <p className="label">Remaining Capacity</p>
             <strong>{remainingCapacity} tickets</strong>
           </div>
+          <div className="status">
+            <p className="label">Total Secured Spend</p>
+            <strong>${totalSpend.toLocaleString()}</strong>
+          </div>
         </div>
       </section>
 
@@ -341,6 +355,7 @@ function App() {
                 <p>{item.dateLabel}</p>
                 <p>{item.zone} | {item.venue}</p>
                 <p><strong>{item.tickets ?? 4}</strong> tickets</p>
+                <p><strong>${(Number(item.dollars) || 0).toLocaleString()}</strong> secured spend</p>
                 <button
                   className="undo"
                   onClick={() => onRemoveSecured(`${item.id}-${item.start}`)}
