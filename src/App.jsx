@@ -8,29 +8,37 @@ const EXCLUDED_KEYWORDS = ['Oklahoma City', 'Surfing']
 const TRAFFIC_ZONES = new Set(['DTLA', 'Westside', 'Pasadena', 'Valley'])
 
 const SESSIONS = [
-  // Tiered ranking tree: tier drives ordering, logistics breaks ties.
-  // TIER 1
+  // TIER 1: GYMNASTICS ANCHORS & FALLBACKS (DTLA Zone)
   { id: 'GAR11', sport: 'Artistic Gymnastics', phase: "Women's All-Around Final", zone: 'DTLA', venue: 'DTLA Arena', start: '2028-07-20T18:00:00', medalSession: true, tier: 1 },
   { id: 'GAR09', sport: 'Artistic Gymnastics', phase: "Women's Team Final", zone: 'DTLA', venue: 'DTLA Arena', start: '2028-07-18T18:00:00', medalSession: true, tier: 1 },
+  { id: 'GAR08', sport: 'Artistic Gymnastics', phase: "Men's Team Final", zone: 'DTLA', venue: 'DTLA Arena', start: '2028-07-17T17:15:00', medalSession: true, tier: 1 },
   { id: 'GAR12', sport: 'Artistic Gymnastics', phase: 'Apparatus Finals Day 1', zone: 'DTLA', venue: 'DTLA Arena', start: '2028-07-22T11:30:00', medalSession: true, tier: 1 },
-  // TIER 1.5
-  { id: 'GAR06', sport: 'Artistic Gymnastics', phase: "Women's Qualification 4", zone: 'DTLA', venue: 'DTLA Arena', start: '2028-07-16T18:15:00', medalSession: false, tier: 1.5 },
-  { id: 'GAR04', sport: 'Artistic Gymnastics', phase: "Women's Qualification 1 & 2", zone: 'DTLA', venue: 'DTLA Arena', start: '2028-07-16T09:45:00', medalSession: false, tier: 1.5 },
-  // TIER 2
+  { id: 'GAR06', sport: 'Artistic Gymnastics', phase: "Women's Qual 4", zone: 'DTLA', venue: 'DTLA Arena', start: '2028-07-16T18:15:00', medalSession: false, tier: 1.5 },
+  { id: 'GAR04', sport: 'Artistic Gymnastics', phase: "Women's Qual 1 & 2", zone: 'DTLA', venue: 'DTLA Arena', start: '2028-07-16T09:45:00', medalSession: false, tier: 1.5 },
+
+  // TIER 2: NICHE MEDAL CORES (Pasadena & DTLA Zones)
   { id: 'DIV12', sport: 'Diving', phase: "Men's 10m Platform Final", zone: 'Pasadena', venue: 'Rose Bowl Aquatics', start: '2028-07-22T15:30:00', medalSession: true, tier: 2 },
   { id: 'DIV06', sport: 'Diving', phase: "Women's 10m Platform Final", zone: 'Pasadena', venue: 'Rose Bowl Aquatics', start: '2028-07-17T15:30:00', medalSession: true, tier: 2 },
-  { id: 'TTE09', sport: 'Table Tennis', phase: 'Mixed Doubles Gold Medal', zone: 'DTLA', venue: 'LA Convention Center', start: '2028-07-17T21:00:00', medalSession: true, tier: 2 },
-  { id: 'TTE36', sport: 'Table Tennis', phase: 'Men/Women Singles Finals', zone: 'DTLA', venue: 'LA Convention Center', start: '2028-07-29T20:00:00', medalSession: true, tier: 2 },
-  { id: 'FEN02', sport: 'Fencing', phase: 'Indiv. Sabre/Epee Gold', zone: 'DTLA', venue: 'LA Convention Center', start: '2028-07-15T18:30:00', medalSession: true, tier: 2 },
-  { id: 'FEN12', sport: 'Fencing', phase: "Men's Epee Team Final", zone: 'DTLA', venue: 'LA Convention Center', start: '2028-07-20T18:30:00', medalSession: true, tier: 2 },
-  // TIER 3
-  { id: 'BVO38', sport: 'Beach Volleyball', phase: "Women's Gold Medal Match", zone: 'Long Beach', venue: 'LB Waterfront', start: '2028-07-28T15:30:00', medalSession: true, tier: 3 },
+  { id: 'DIV01', sport: 'Diving', phase: "Women's Synchro 3m Final", zone: 'Pasadena', venue: 'Rose Bowl Aquatics', start: '2028-07-16T10:00:00', medalSession: true, tier: 2 },
+  { id: 'TTE09', sport: 'Table Tennis', phase: 'Mixed Doubles Gold', zone: 'DTLA', venue: 'Convention Center', start: '2028-07-17T21:00:00', medalSession: true, tier: 2 },
+  { id: 'TTE12', sport: 'Table Tennis', phase: "Men's Singles Gold", zone: 'DTLA', venue: 'Convention Center', start: '2028-07-19T21:00:00', medalSession: true, tier: 2 },
+  { id: 'FEN02', sport: 'Fencing', phase: 'Indiv. Sabre/Epee Gold', zone: 'DTLA', venue: 'Convention Center', start: '2028-07-15T18:30:00', medalSession: true, tier: 2 },
+  { id: 'FEN12', sport: 'Fencing', phase: "Men's Epee Team Final", zone: 'DTLA', venue: 'Convention Center', start: '2028-07-20T18:30:00', medalSession: true, tier: 2 },
+  { id: 'TRA01', sport: 'Trampoline', phase: "Men's & Women's Finals", zone: 'DTLA', venue: 'DTLA Arena', start: '2028-07-21T15:00:00', medalSession: true, tier: 2 },
+
+  // TIER 3: ATMOSPHERE & VALUE FILLERS (Long Beach, Carson, & Valley Zones)
   { id: 'BVO01', sport: 'Beach Volleyball', phase: 'Preliminary Round', zone: 'Long Beach', venue: 'LB Waterfront', start: '2028-07-15T09:00:00', medalSession: false, tier: 3 },
-  { id: 'CLB08', sport: 'Sport Climbing', phase: 'Lead/Bouldering Finals', zone: 'Long Beach', venue: 'LB Sports Park', start: '2028-07-28T13:45:00', medalSession: true, tier: 3 },
-  { id: 'ARC09', sport: 'Archery', phase: "Men's Team Gold Medal", zone: 'Carson', venue: 'Carson Stadium', start: '2028-07-24T19:30:00', medalSession: true, tier: 3 },
-  { id: 'SQU09', sport: 'Squash', phase: "Men's/Women's Finals", zone: 'Unknown', venue: 'TBD LA Venue', start: '2028-07-23T20:30:00', medalSession: true, tier: 3 },
-  { id: 'BDM18', sport: 'Badminton', phase: 'Mixed Doubles Finals', zone: 'DTLA', venue: 'Galen Center', start: '2028-07-21T08:00:00', medalSession: true, tier: 3 },
+  { id: 'BVO20', sport: 'Beach Volleyball', phase: 'Night Prelims', zone: 'Long Beach', venue: 'LB Waterfront', start: '2028-07-19T20:00:00', medalSession: false, tier: 3 },
+  { id: 'CLB04', sport: 'Sport Climbing', phase: 'Speed Finals', zone: 'Long Beach', venue: 'LB Sports Park', start: '2028-07-26T18:45:00', medalSession: true, tier: 3 },
+  { id: 'ARC03', sport: 'Archery', phase: 'Compound Mixed Team Final', zone: 'Carson', venue: 'Carson Stadium', start: '2028-07-21T19:30:00', medalSession: true, tier: 3 },
+  { id: 'ARC11', sport: 'Archery', phase: "Women's Team Final", zone: 'Carson', venue: 'Carson Stadium', start: '2028-07-25T19:30:00', medalSession: true, tier: 3 },
+  { id: 'SQU09', sport: 'Squash', phase: "Men's/Women's Finals", zone: 'DTLA', venue: 'Convention Center', start: '2028-07-23T20:30:00', medalSession: true, tier: 3 },
+  { id: 'BDM15', sport: 'Badminton', phase: 'Mixed Doubles Finals', zone: 'DTLA', venue: 'Galen Center', start: '2028-07-21T08:00:00', medalSession: true, tier: 3 },
   { id: 'SKB05', sport: 'Skateboarding', phase: 'Street Finals', zone: 'Valley', venue: 'Valley Complex', start: '2028-07-25T10:30:00', medalSession: true, tier: 3 },
+  { id: 'WPO25', sport: 'Water Polo', phase: "Women's Gold Medal", zone: 'Long Beach', venue: 'LB Sports Park', start: '2028-07-29T15:30:00', medalSession: true, tier: 3 },
+  { id: 'TEN25', sport: 'Tennis', phase: "Men's Singles Final", zone: 'Carson', venue: 'Carson Tennis Center', start: '2028-07-23T12:00:00', medalSession: true, tier: 3 },
+  { id: 'HBL45', sport: 'Handball', phase: "Women's Gold Medal", zone: 'Long Beach', venue: 'LB Arena', start: '2028-07-30T10:00:00', medalSession: true, tier: 3 },
+  { id: 'ATH01', sport: 'Athletics', phase: 'Evening Session (Value)', zone: 'DTLA', venue: 'Memorial Coliseum', start: '2028-07-21T18:00:00', medalSession: false, tier: 3 },
 ]
 
 function parseDate(value) {
