@@ -77,6 +77,8 @@ function App() {
   const [spentTickets, setSpentTickets] = useState(0)
   const [over200Toggle, setOver200Toggle] = useState(false)
   const [ticketsToSecure, setTicketsToSecure] = useState(4)
+  const [recommendationIndex, setRecommendationIndex] = useState(0)
+  const [viewMode, setViewMode] = useState('pilot')
 
   const firstSecuredStart = wonSessions[0]?.start ?? null
   const anchorZone = getZoneAnchor(wonSessions)
@@ -91,8 +93,8 @@ function App() {
     return true
   }), [firstSecuredStart, rejectedIds, wonSessions])
 
-  const nextMove = useMemo(() => {
-    if (remainingCapacity <= 0 || !availableSessions.length) return null
+  const scoredSessions = useMemo(() => {
+    if (remainingCapacity <= 0 || !availableSessions.length) return []
 
     const validSessions = availableSessions.filter((session) => {
       const dateCheck = !firstSecuredStart || differenceInDays(session.start, firstSecuredStart) <= 6
@@ -100,7 +102,7 @@ function App() {
       return dateCheck && zoneCheck
     })
 
-    const scored = validSessions.map((session) => {
+    return validSessions.map((session) => {
       const baseScore = (10 - session.tier) * 100
       const logisticsPenalty = getLogisticsPenalty(session, anchorZone)
       const trafficPenalty =
@@ -116,25 +118,43 @@ function App() {
         score: baseScore - logisticsPenalty - trafficPenalty,
       }
     }).sort((a, b) => b.score - a.score)
+  }, [anchorZone, availableSessions, firstSecuredStart, remainingCapacity])
 
-    const top = scored[0]
-    const shouldPivot = over200Toggle && top.id.startsWith('GAR') && top.phase === 'Final'
+  const nextMove = useMemo(() => {
+    if (!scoredSessions.length) return null
+    const boundedIndex = Math.min(recommendationIndex, scoredSessions.length - 1)
+    const top = scoredSessions[boundedIndex]
+    const shouldPivot = over200Toggle && top.id.startsWith('GAR') && top.phase.includes('Final')
     if (shouldPivot) {
-      return scored.find((session) => session.id === 'GAR06') ?? { ...top, id: 'GAR06', phase: 'Qualifying' }
+      return scoredSessions.find((session) => session.id === 'GAR06') ?? { ...top, id: 'GAR06', phase: 'Qualifying' }
     }
     return top
-  }, [anchorZone, availableSessions, firstSecuredStart, over200Toggle, remainingCapacity])
+  }, [over200Toggle, recommendationIndex, scoredSessions])
+
+  const activeRecommendationIndex = Math.min(recommendationIndex, Math.max(scoredSessions.length - 1, 0))
 
   const onSecured = () => {
     if (!nextMove) return
     const n = Math.max(1, Math.min(Number(ticketsToSecure) || 1, remainingCapacity))
     setWonSessions((prev) => [...prev, { ...nextMove, tickets: n }])
     setSpentTickets((prev) => prev + n)
+    setRecommendationIndex(0)
   }
 
   const onRejected = () => {
     if (!nextMove) return
     setRejectedIds((prev) => [...prev, nextMove.id])
+    setRecommendationIndex(0)
+  }
+
+  const onRemoveSecured = (sessionKey) => {
+    setWonSessions((prev) => {
+      const match = prev.find((session) => `${session.id}-${session.start}` === sessionKey)
+      if (!match) return prev
+      const refunded = Number(match.tickets) || 0
+      setSpentTickets((current) => Math.max(0, current - refunded))
+      return prev.filter((session) => `${session.id}-${session.start}` !== sessionKey)
+    })
   }
 
   const itinerary = [...wonSessions]
@@ -146,6 +166,20 @@ function App() {
       }),
     }))
 
+  const sessionsBySport = useMemo(() => {
+    const grouped = {}
+    SESSIONS.forEach((session) => {
+      if (!grouped[session.sport]) grouped[session.sport] = []
+      grouped[session.sport].push(session)
+    })
+    return Object.entries(grouped)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([sport, sessions]) => ({
+        sport,
+        sessions: sessions.sort((a, b) => parseDate(a.start) - parseDate(b.start)),
+      }))
+  }, [])
+
   return (
     <main className="app">
       <section className="command-center">
@@ -156,6 +190,20 @@ function App() {
             <p className="sub">
               Operator order: {GROUP_ORDER.join(' -> ')} | Capacity used: {spentTickets}/{WINDOW_CAPACITY} tickets
             </p>
+            <div className="mode-tabs">
+              <button
+                className={viewMode === 'pilot' ? 'tab active' : 'tab'}
+                onClick={() => setViewMode('pilot')}
+              >
+                Live Pilot
+              </button>
+              <button
+                className={viewMode === 'sports' ? 'tab active' : 'tab'}
+                onClick={() => setViewMode('sports')}
+              >
+                By Sport
+              </button>
+            </div>
           </div>
           <label className="pivot-toggle">
             <input type="checkbox" checked={over200Toggle} onChange={(event) => setOver200Toggle(event.target.checked)} />
@@ -163,7 +211,8 @@ function App() {
           </label>
         </header>
 
-        <article className="next-card">
+        {viewMode === 'pilot' && (
+          <article className="next-card">
           <p className="label">Autopilot Next Move</p>
           {nextMove ? (
             <>
@@ -201,13 +250,62 @@ function App() {
                 <button className="go" onClick={onSecured}>Secured</button>
                 <button className="stop" onClick={onRejected}>Sold Out / Over Budget / Pass</button>
               </div>
+              <div className="nav-actions">
+                <button
+                  className="nav-btn"
+                  onClick={() => setRecommendationIndex((idx) => Math.max(0, idx - 1))}
+                  disabled={recommendationIndex <= 0}
+                >
+                  Back Event
+                </button>
+                <p className="nav-copy">
+                  {Math.min(activeRecommendationIndex + 1, Math.max(scoredSessions.length, 1))} / {scoredSessions.length} ranked options
+                </p>
+                <button
+                  className="nav-btn"
+                  onClick={() =>
+                    setRecommendationIndex((idx) => Math.min(Math.max(scoredSessions.length - 1, 0), idx + 1))
+                  }
+                  disabled={recommendationIndex >= scoredSessions.length - 1}
+                >
+                  Forward Event
+                </button>
+              </div>
             </>
           ) : (
             <p className="empty">
               No eligible next move. Capacity may be full or all sessions were filtered by 6-day/zone logic.
             </p>
           )}
-        </article>
+          </article>
+        )}
+
+        {viewMode === 'sports' && (
+          <section className="sports-view">
+            <p className="label">Session Library By Sport</p>
+            <div className="sport-groups">
+              {sessionsBySport.map((group) => (
+                <article key={group.sport} className="sport-card">
+                  <h3>{group.sport}</h3>
+                  <ul>
+                    {group.sessions.map((item) => (
+                      <li key={item.id}>
+                        <strong>{item.id}</strong> - {item.phase} - {item.zone} -{' '}
+                        {parseDate(item.start).toLocaleString([], {
+                          weekday: 'short',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
 
         <div className="status-grid">
           <div className="status">
@@ -235,6 +333,12 @@ function App() {
                 <p>{item.dateLabel}</p>
                 <p>{item.zone} | {item.venue}</p>
                 <p><strong>{item.tickets ?? 4}</strong> tickets</p>
+                <button
+                  className="undo"
+                  onClick={() => onRemoveSecured(`${item.id}-${item.start}`)}
+                >
+                  Undo / Remove
+                </button>
               </li>
             ))}
           </ul>

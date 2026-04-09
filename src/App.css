@@ -41,6 +41,28 @@ h1 {
   font-weight: 600;
 }
 
+.mode-tabs {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.tab {
+  min-width: 0;
+  width: auto;
+  padding: 9px 12px;
+  border: 1px solid #3d4666;
+  background: #1b2133;
+  color: #c9d4fa;
+  font-size: 0.9rem;
+}
+
+.tab.active {
+  border-color: #7fd0ff;
+  background: #1f3950;
+  color: #dff3ff;
+}
+
 .pivot-toggle {
   display: flex;
   gap: 10px;
@@ -157,6 +179,34 @@ button:hover {
   filter: brightness(1.05);
 }
 
+.nav-actions {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-btn {
+  min-width: 0;
+  width: auto;
+  padding: 10px 12px;
+  border: 1px solid #45517a;
+  background: #222b44;
+  color: #dce5ff;
+  font-size: 0.9rem;
+}
+
+.nav-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.nav-copy {
+  margin: 0;
+  color: #9fb0df;
+  font-size: 0.9rem;
+}
+
 .status-grid {
   margin-top: 16px;
   display: grid;
@@ -169,6 +219,41 @@ button:hover {
   border: 1px solid #303957;
   border-radius: 10px;
   padding: 12px;
+}
+
+.sports-view {
+  border: 2px solid #2f3754;
+  background: #171c2b;
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.sport-groups {
+  display: grid;
+  gap: 10px;
+  max-height: 460px;
+  overflow: auto;
+}
+
+.sport-card {
+  background: #141a27;
+  border: 1px solid #303957;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.sport-card h3 {
+  margin: 0 0 8px;
+}
+
+.sport-card ul {
+  margin: 0;
+  padding-left: 18px;
+  color: #c8d3fa;
+}
+
+.sport-card li {
+  margin-bottom: 6px;
 }
 
 .sidebar {
@@ -194,6 +279,18 @@ button:hover {
   border-radius: 10px;
   padding: 10px;
   background: #171d2d;
+}
+
+.undo {
+  margin-top: 8px;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #5f6a91;
+  background: #283250;
+  color: #e8edff;
+  padding: 9px 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
 }
 
 .sidebar p {
@@ -225,6 +322,11 @@ button:hover {
 
   .actions {
     flex-direction: column;
+  }
+
+  .nav-actions {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   button {
